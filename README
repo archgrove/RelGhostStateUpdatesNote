@@ -1,3 +1,7 @@
 A short note on the equivalence of two proof techniques in Separation Logic. Whenever a state update relation satisfies certain properties, it doesn't matter whether you present it as a kind of consequence relation or frame rule.
 
 This note assumes familiarity with the "Views" framework of Dinsdale-Young, Parkinson et al.
+
+Adam Wright
+adam.wright07@imperial.ac.uk
+August 2012
