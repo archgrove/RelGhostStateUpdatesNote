@@ -1,0 +1,269 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[all]{xy}
+\usepackage[margin=2.8cm]{geometry}
+\usepackage{semantic}
+
+\let\oldenumerate=\enumerate
+\def\enumerate{
+  \oldenumerate
+  \setlength{\itemsep}{-0.15em}
+}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{parameter}{Parameter}
+\newtheorem{remark}{Remark}
+
+\theoremstyle{theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{theorem}{Theorem}
+
+%
+% Macros
+%
+
+% Normal mathematical notations
+\newcommand{\partialfunc}{\rightharpoonup}
+\newcommand{\finitepartialfunc}{\stackrel{\text{fin}}{\rightharpoonup}}
+\newcommand{\totalfunc}{\rightarrow}
+\newcommand{\totalfinitefunc}{\stackrel{\text{fin}}{\rightarrow}}
+\newcommand{\dom}{\text{dom}}
+\newcommand{\cod}{\text{cod}}
+\newcommand{\domainremove}{\downharpoonright}
+\newcommand{\powerset}{\curly{P}}
+\newcommand{\defeq}{\triangleq}
+\newcommand{\discup}{\sqcup}
+\newcommand{\discap}{\sqcap}
+\newcommand{\inferencerule}[2]{\begin{array}{c}
+                                \vspace{0.2em}
+                                {#1}\\
+                                \hline
+                                \vspace{0.2em}
+                                {#2}
+                               \end{array}}
+\newcommand{\emptyfunc}{\{\} \rightarrow \{\}}
+\newcommand{\semRel}{\preccurlyeq}
+
+% Sets
+\newcommand{\Code}{\mathbb{C}}
+\newcommand{\Views}{\textsc{Views}}
+\newcommand{\Actions}{\textsc{Actions}}
+\newcommand{\States}{\textsc{States}}
+
+% Elements
+\newcommand{\idAction}{\textsc{id}}
+\newcommand{\action}{\alpha}
+\newcommand{\state}{\mathbf{s}}
+
+% Textual manipulation
+\newcommand{\callout}[1]{\textbf{#1}}
+\newcommand{\curly}[1]{{ \cal #1 }}
+\newcommand{\code}[1]{\ensuremath{\texttt{#1}}}
+
+% Functions on model elements
+\newcommand{\frameRel}{~\mathop{R}~}
+\newcommand{\genRel}{~\mathop{\curly{R}}~}
+\newcommand{\act}[1]{[\!| #1 |\!]}
+\newcommand{\reify}[1]{\left\lfloor{#1}\right\rfloor}
+\newcommand{\heapcompose}{\bullet}
+\newcommand{\separatefrom}{\#}
+\newcommand{\substate}{\leq}
+
+% Separation primitive
+\newcommand{\sep}{*}
+\newcommand{\sepadj}{-\!\!\!\sep}
+\newcommand{\pointsto}{\mapsto}
+\newcommand{\emp}{\text{emp}}
+
+% Angelic adjoints
+\newcommand{\angsepadj}{\prec\!\!\!\!-\!\!\!\sep}
+
+% Context primitive
+\newcommand{\sepapp}[1]{\circ_{#1}}
+\newcommand{\sepappadja}[1]{-\!\!\!\sepapp{#1}}
+\newcommand{\sepappadjb}[1]{\sepapp{#1}\!\!\!\!\!\!-}
+\newcommand{\false}{\textbf{false}}
+\newcommand{\true}{\textbf{true}}
+
+% Hoare Logic
+\newcommand{\triple}[3]{\{\ #1\ \}\ #2\ \{\ #3\ \}}
+
+\begin{document}
+
+\title{Relational Updates in Views}
+\author{Adam Wright}
+
+\maketitle
+
+This document assumes you are familiar with the notation of the Views paper. Specifically, you need to recall that:
+
+\begin{enumerate}
+  \item A View is a commutative semigroup $(\Views, *)$, where $p, q, r$ range over $\Views$.
+  \item There are machine states, $\States$
+  \item There is a reification funciton $\reify : \States \totalfunc \powerset(\Views)$.
+  \item There is semantic entailment relation $\semRel \subset \Views \times \Views$
+  \item There are a set of machine actions $\Actions$, ranged over by $\action$ which includes at least the identity action $\idAction$. These actions are state transformers on machine states, $\action : \States \totalfunc \powerset(\States)$. The transformer for $\idAction$ is $\idAction(\state) = \{ \state \}$.
+  \end{enumerate}
+
+\begin{definition}[Semantic Consequence Rule]
+  \begin{displaymath}
+    \inference{p \semRel p' & \triple{p'}{\Code}{q'} & q' \semRel q}
+              {\triple{p}{\Code}{q}}
+  \end{displaymath}
+\end{definition}
+
+\begin{definition}[Generalised Frame Rule]
+  \begin{displaymath}
+    \inference{\triple{p}{\Code}{q}}
+              {\triple{f(p)}{\Code}{f(q)}}
+  \end{displaymath}
+\end{definition}
+
+The soundness of these rules relies on the following properties of $\semRel$ and $f$.
+
+\begin{definition}[Requirements of semantic consequence relations]
+  \label{definition:semanticConsequenceReqs}
+  A choice of relation $\semRel$ is sound if it preserves all frames:
+
+  \begin{displaymath}
+    \forall p, q \in \Views.~p \semRel q \implies \forall r \in \Views.~ \reify{p * r} \subseteq \reify{q * r}
+  \end{displaymath}
+\end{definition}
+
+\begin{definition}[Requirements of generalised frame functions]
+  A choice of function $f$ is sound if is preserves all actions under frames:
+
+  \begin{displaymath}
+    \forall p, q \in \Views, \action \in \Actions.~
+    \begin{array}{c}
+      (\forall r \in \Views.~\act{\action}\reify{p * r} \subseteq \reify{q * r})
+      \\ \implies \\
+      (\forall r \in \Views.~\act{\action}\reify{f(p) * r} \subseteq \reify{f(q) * r})
+    \end{array}
+  \end{displaymath}
+\end{definition}
+
+We can generalise the Generalised Frame Rule further. Consider taking $f$ as a relation, $R$. The Generalised Frame Rule then renders as:
+
+\begin{definition}[Relational Frame Rule]
+  \begin{displaymath}
+    \inference{p' \frameRel p & \triple{p'}{\Code}{q'} & q' \frameRel q}
+              {\triple{p}{\Code}{q}}
+  \end{displaymath}
+\end{definition}
+
+Note that if $\frameRel$ is functional, then this rule collapses to the Generalised Frame Rule.
+
+The soundness of this rule relies on the following properties of $\frameRel$:
+
+\begin{definition}[Requirements of relational frame relations]
+  \label{definition:relationalFrameReqs}
+  A choice of relation $\frameRel$ is sound if it is both left-total:
+
+  \begin{displaymath}
+    \text{For all } p \in \Views, \text{ there exists some } q \in \Views \text{ such that } p \frameRel q
+  \end{displaymath}
+
+  and if it preserves all actions under frames:
+
+  \begin{displaymath}
+    \forall p, q \in \Views, \action \in \Actions.~
+    \begin{array}{c}
+      (\forall r \in \Views.~\act{\action}\reify{p * r} \subseteq \reify{q * r})
+      \\ \implies \\
+      (\forall r, p', q' \in \Views.~p \frameRel p' \land q \frameRel q' \implies ~\act{\action}\reify{p' * r} \subseteq \reify{q' * r})
+    \end{array}
+  \end{displaymath}
+\end{definition}
+
+The first is the natural extension of the generalised frame rule requirement. The second (left totality) is sufficient to ensure cases such as $\triple{p'}{\Code}{q'}$ where $p' \frameRel p$ but there is no $q$ such that $q' \frameRel q$ are not permitted. Were such relations allowed, the proof obligation to check actions would become vacuous, and we could pick a relation showing the divergence of any code.
+
+\begin{lemma}[The Relational Frame rule is sound]
+  Let $\frameRel$ be a relation satisfying the properties in definition \ref{definition:relationalFrameReqs}. Then, derivations using the View inference rules and the relational frame rule using $\frameRel$ are sound.
+
+  \begin{proof}
+    This is proven as another case of the general views soundness result. The proof is basically identical to the frame rule case, where we know that that $\action |~\vdash \{ p_r \}\{p_r'\}$ by the left totality and action preservation properties.
+  \end{proof}
+\end{lemma}
+
+It is interesting to examine choices of relation in which \emph{both} the rule of sementic consequence and the relational frame rule are applicable. Examining the rules, it is clear the only difference between generalised frame and semantic consequence is the order of the precondition relationship, and the stronger proof requirements. Consider then, relations $\curly{R}$ which are symmetric and reflexive. 
+
+\begin{lemma}[Frame/Consequence freedom]
+  Let $\genRel \subset \Views \times \Views$ be a symmetric, reflexive relation.  Then, $\genRel$ satisfies the requirements of a sementic consequence relation if and only if it satisfies the requirements of a relational frame relation.
+
+  \begin{proof}
+    \textbf{Right direction} $\rightarrow$: We first show that if $\genRel$ is a semantic consequence relation, it is a relational frame relation. We thus have the following properties by assumption:
+    
+    \begin{enumerate}
+      \item $\genRel$ is symmetric.
+      \item $\genRel$ is reflexive.
+      \item $\forall p, q \in \Views.~p \genRel q \implies \forall r \in \Views.~ \reify{p * r} \subseteq \reify{q * r}$
+    \end{enumerate}
+
+    We must show the conditions of definition \ref{definition:relationalFrameReqs}. Left totality is straightforward (all reflexive relations are left total). For the action preservation property, consider properties 1 and 3. Together, these imply that if $p \genRel q$, then $\forall r \in \Views.~\reify{p * r} = \reify{q * r}$. The requirement for action preservation then follow directly from the premise of the implication we are required to show. \\
+
+    \noindent \textbf{Left direction} $\leftarrow$: We now show that if $\genRel$ is a relational frame relation, it is a semantic consequence relation. We thus have the following properties by assumption:
+
+    \begin{enumerate}
+      \item $\genRel$ is symmetric.
+      \item $\genRel$ is reflexive.
+      \item $\genRel$ is left-total.
+      \item \begin{displaymath}
+          \forall p, q \in \Views, \action \in \Actions.~
+          \begin{array}{c}
+            (\forall r \in \Views.~\act{\action}\reify{p * r} \subseteq \reify{q * r})
+            \\ \implies \\
+            (\forall r, p', q' \in \Views.~p \genRel p' \land q \genRel q' \implies ~\act{\action}\reify{p' * r} \subseteq \reify{q' * r})
+          \end{array}
+        \end{displaymath}
+    \end{enumerate}
+
+    We must show it satisfies the conditions of definition \ref{definition:semanticConsequenceReqs}. In assumption 4, pick $\action = \idAction$, $p = q$. Expanding, we derive:
+
+    \begin{displaymath}
+      \begin{array}{c}
+        (\forall r \in \Views.~\reify{p * r} \subseteq \reify{p * r})
+        \\ \implies \\
+        (\forall r, p', q' \in \Views.~p \genRel p' \land q \genRel q' \implies ~\reify{p' * r} \subseteq \reify{q' * r})
+      \end{array}
+    \end{displaymath}
+
+    which is equivalent to 
+
+    \begin{displaymath}
+      (\forall r, p', q' \in \Views.~p \genRel p' \land q \genRel q' \implies ~\reify{p' * r} \subseteq \reify{q' * r})
+    \end{displaymath}
+
+    Now pick $p' = p$ and $q' = q$. Expanding, we derive
+
+    \begin{displaymath}
+      (\forall r \in \Views.~p \genRel p \land p \genRel q \implies ~\reify{p * r} \subseteq \reify{q * r})
+    \end{displaymath}
+
+    The first conjunction is discharged by assumption 2 (reflexivity). Ergo:
+
+    \begin{displaymath}
+      p \genRel q \implies \forall r \in \Views.~\reify{p * r} \subseteq \reify{q * r}
+    \end{displaymath}
+
+    which was to be shown.
+  \end{proof}
+\end{lemma}
+
+\subsection{Conclusions}
+
+  In some sense, both the generalised frame rule and semantic consequence rules are methods of joining proofs together. The frame rule takes a more general proof, and specialises it, when that specialisation has no effect on the validity of the original proof. We can thus join the generalist proof to more specific cases - the very essence of modular reasoning. The semantic consequence rule increases the number of times one can reuse a proof, by revealing that the state represented in a derivation is actually sufficient (from a proof validity perspective) connect to the other proof.
+
+  The results herein show that, for certain types of proof transformation that one might call ``ghost state updates'', it makes no formal difference whether one presents the updates as some kind of semantic consequence or frame rule.
+
+
+
+\end{document}
